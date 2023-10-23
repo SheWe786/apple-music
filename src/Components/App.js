@@ -3,12 +3,12 @@ import { BrowserRouter as Router, Route, Routes, Link, useNavigate } from "react
 import Sidebar from "./Sidebar.js";
 import Navbar from "./Navbar.js";
 // import BrowsePage from "./BrowsePage.js";
-// import MusicPlayerPage from './MusicPlayerPage';
-// import SongList from './SongList.js';
+import MusicPlayerPage from './MusicPlayerPage';
+import SongList from './SongList.js';
 // import SignIn from "./SignIn.js";
 
 export default function App() {
-  const [token, setToken] = useState(null);
+  // const [token, setToken] = useState(null);
 
   return (
     <div className="app-container">
@@ -16,13 +16,13 @@ export default function App() {
         <Sidebar />
         <div className="main-content">
           <Navbar />
-          {/* <Routes> */}
+          <Routes>
             {/* <Route path="/browse" element={<BrowsePage />} /> */}
-            {/* <Route path="/music-player" element={<MusicPlayerPage />} /> */}
-            {/* <Route path="/album" element={<SongList token={token} />} /> Pass token as prop */}
+            <Route path="/music-player" element={<MusicPlayerPage />} />
+            <Route path="/album" element={<SongList token={token} />} /> Pass token as prop
             {/* <Route path="/signin" element={<SignIn onSignIn={setToken} />} /> Pass setToken as prop */}
             {/* Add other routes as needed */}
-          {/* </Routes> */}
+          </Routes>
         </div>
       </Router>
     </div>

@@ -1,0 +1,4 @@
+song-list-item:hover {
+  background-color: rgb(35, 37, 37); 
+  transform: translateX(10px); 
+}
