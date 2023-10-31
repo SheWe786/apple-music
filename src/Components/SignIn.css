@@ -1,0 +1,59 @@
+.maindiv{
+  background-color: white;
+  background: white;
+}
+.signInBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 200px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  /* background-color: red; */
+  max-width: 300px;
+  margin: 0 auto;
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); */
+}
+
+.heading {
+  font-size: 10px;
+  margin-bottom: 10px;
+  background-color: white;
+}
+
+/* .signinForm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+} */
+
+/* .signinInput {
+  margin: 5px 0;
+  padding: 10px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+} */
+
+/* .signinButton {
+  background-color: #007bff;
+  color: #fff;
+  padding: 10px 15px;
+  margin: 10px;
+  border: none;
+  cursor: pointer;
+} */
+
+/* .signinButton:hover {
+  background-color: #0056b3;
+} */
+
+
+
+/* .signinButton[type="button"] {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: red;
+  text-decoration: underline;
+} */

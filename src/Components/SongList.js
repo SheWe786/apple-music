@@ -1,28 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { Typography, List, ListItem, Card, CardContent, CardMedia, IconButton } from '@mui/material';
-import { useLocation } from 'react-router-dom';
-import { PlayArrow, Pause, Favorite, FavoriteBorder } from '@mui/icons-material';
-import { useMusicPlayer } from './MusicPlayerContext';
-import FavoriteSongs from './FavoriteSongs';
-
-
+import React, { useState, useEffect } from "react";
+import {
+  Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Card,
+  CardContent,
+  CardMedia,
+  IconButton,
+} from "@mui/material";
+import { useLocation } from "react-router-dom";
+import {
+  PlayArrow,
+  Pause,
+  Favorite,
+  FavoriteBorder,
+} from "@mui/icons-material";
+import { useMusicPlayer } from "./MusicPlayerContext";
+import FavoriteSongs from "./FavoriteSongs";
+import "./SongList.css";
+import { addSongToFavorites, removeSongFromFavorites } from "./authenticate";
 
 function SongList() {
   const { state } = useLocation();
-  const { album } = state;
-  const { setCurrentSong } = useMusicPlayer(); 
-  const [isPlaying, setIsPlaying] = useState(Array(album.songs.length).fill(false));
+  const album = state && state.album;
+  const { setCurrentSong } = useMusicPlayer();
+  const [isPlaying, setIsPlaying] = useState(
+    Array(album.songs.length).fill(false)
+  );
   const [artistNames, setArtistNames] = useState({});
-  const [favorites, setFavorites] = useState([]); 
+  const [isfavorites, setIsFavorites] = useState(false);
   const [favoriteSongs, setFavoriteSongs] = useState([]);
-  const [audioElements, setAudioElements] = useState(Array(album.songs.length).fill(null));
+  const [audioElements, setAudioElements] = useState(
+    Array(album.songs.length).fill(null)
+  );
 
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+
+  // Function to toggle play/pause for a song
   const togglePlay = (index) => {
     setIsPlaying((prevIsPlaying) => {
       const newIsPlaying = [...prevIsPlaying];
       newIsPlaying[index] = !newIsPlaying[index];
       setCurrentSong(album.songs[index]);
-
 
       // Pause all other audio elements when a new one starts playing
       audioElements.forEach((audio, i) => {
@@ -40,44 +63,56 @@ function SongList() {
       return newIsPlaying;
     });
   };
-
-  const toggleFavorite = async (song) => {
-    await fetch('https://academics.newtonschool.co/api/v1/music/favorites/like', {
-      method: 'PATCH',
-      headers: { 
-        'Authorization': `Bearer ${token}`, // Use token in your fetch call
-        'projectID': 'f104bi07c490',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ "songId": song.id })
-    });
-    // Refresh favorites
-    fetch('https://academics.newtonschool.co/api/v1/music/album?limit=100', {
-      headers: {
-        'projectId': 'f104bi07c490'
+  console.log("songlis ", favoriteSongs);
+  // Function to toggle favorite status for a song
+  const toggleFavorite = async (songId) => {
+    try {
+      if (favoriteSongs.includes(songId)) {
+        await removeSongFromFavorites("/music/favorites/like", songId);
+        setIsFavorites(false);
+      } else {
+        await addSongToFavorites("/music/favorites/like", songId);
+        setIsFavorites(true);
       }
-    })
-    .then(response => response.json())
-    .then(res => setFavorites(res.data)) // Use setFavorites here
-    .catch(error => console.error('Error fetching album data:', error));
-  };
-  
-  const fetchArtistNames = async () => {
-    const artistIds = album.songs.reduce((ids, song) => [...ids, ...song.artist], []);
-    const uniqueArtistIds = [...new Set(artistIds)];
 
+      setFavoriteSongs((prevLikedSongs) =>
+        prevLikedSongs.includes(songId)
+          ? prevLikedSongs.filter((id) => id !== songId)
+          : [...prevLikedSongs, songId]
+      );
+    } catch (error) {
+      console.error("Error toggling like:", error);
+    }
+  };
+  // Function to fetch artist names and store them in the artistNames state
+  const fetchArtistNames = async () => {
+    const artistIds = album.songs.reduce(
+      (ids, song) => [...ids, ...song.artist],
+      []
+    );
+    const uniqueArtistIds = [...new Set(artistIds)];
     const names = {};
+
     await Promise.all(
       uniqueArtistIds.map(async (artistId) => {
-        const response = await fetch(`YOUR_ARTIST_API_ENDPOINT/${artistId}`);
-        const data = await response.json();
-        names[artistId] = data.name;
+        const response = await fetch(
+          `https://academics.newtonschool.co/api/v1/music/artist/${artistId}`,
+          {
+            headers: {
+              projectId: "f104bi07c490",
+            },
+          }
+        );
+        const res = await response.json();
+        names[artistId] = res.data.name;
       })
     );
 
+    // Update the artistNames state with the fetched artist names
     setArtistNames(names);
   };
 
+  // Use the useEffect hook to fetch artist names when the album changes
   useEffect(() => {
     if (album) {
       fetchArtistNames();
@@ -89,26 +124,45 @@ function SongList() {
   }
 
   return (
-    <div style={{ marginTop: '53px', padding: '20px' }}>
-      <Card style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', backgroundColor: '#1d1c1c' }}>
+    <div style={{ marginTop: "53px", padding: "20px" }}>
+      <Card
+        style={{
+          display: "flex",
+          alignItems: "center",
+          marginBottom: "20px",
+          backgroundColor: "#1d1c1c",
+        }}
+      >
         <CardMedia
           component="img"
           height="200"
           alt={album.title}
           src={album.image}
-          style={{ objectFit: 'contain', maxWidth: '200px' }}
+          style={{ objectFit: "contain", maxWidth: "200px" }}
         />
         <CardContent>
-          <Typography variant="h5" gutterBottom style={{ color: 'white' }}>
+          <Typography variant="h5" gutterBottom style={{ color: "white" }}>
             {album.title}
           </Typography>
-          <Typography variant="body2" color="textSecondary" style={{ color: 'white' }}>
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            style={{ color: "white" }}
+          >
             Description: {album.description}
           </Typography>
-          <Typography variant="body2" color="textSecondary" style={{ color: 'white' }}>
-            Artists: {album.artists.map((artist) => artist.name).join(', ')}
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            style={{ color: "white" }}
+          >
+            Artists: {album.artists.map((artist) => artist.name).join(", ")}
           </Typography>
-          <Typography variant="body2" color="textSecondary" style={{ color: 'white' }}>
+          <Typography
+            variant="body2"
+            color="textSecondary"
+            style={{ color: "white" }}
+          >
             Release Date: {new Date(album.release).toLocaleDateString()}
           </Typography>
         </CardContent>
@@ -117,34 +171,71 @@ function SongList() {
       <Typography variant="h5" gutterBottom>
         Songs in {album.title}
       </Typography>
-      <Card style={{ backgroundColor: '#1d1c1c' }}>
-        <List>
-          {album.songs.map((song, index) => (
-            <ListItem
-              key={song._id}
-              style={{ paddingBottom: '10px', paddingTop: '10px', backgroundColor: index % 2 === 0 ? '#1d1c1c' : '#232525' }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', color: 'white' }}>
-                <span>{song.title}</span>
-                <span>{`Artist(s): ${song.artist.map((artistId) => artistNames[artistId]).join(', ')}`}</span>
-                <span>{`Mood: ${song.mood}`}</span>
-              </div>
-              <IconButton onClick={() => togglePlay(index)}>
-                {isPlaying[index] ? <Pause /> : <PlayArrow />}
-              </IconButton>
-              <IconButton onClick={() => toggleFavorite(song)}>
-                {favoriteSongs.includes(song) ? <Favorite style={{ color: 'red' }} /> : <FavoriteBorder />}
-              </IconButton>
-              <audio
-                ref={(audio) => (audioElements[index] = audio)}
-                src={song.audio_url}
-                preload="auto"
-              ></audio>
-            </ListItem>
-          ))}
-        </List>
-      </Card>
-      <FavoriteSongs favoriteSongs={favoriteSongs} toggleFavorite={toggleFavorite} />
+      {album.songs && album.songs.length > 0 && (
+        <TableContainer component={Card} style={{ backgroundColor: "#1d1c1c" }}>
+          <Table className="table">
+            <TableHead>
+              <TableRow>
+                <TableCell style={{ color: "white" }}>Song</TableCell>
+                <TableCell style={{ color: "white" }}>Artist Names</TableCell>
+                <TableCell style={{ color: "white" }}>Album Name</TableCell>
+                <TableCell style={{ color: "white" }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {album.songs.map((song, index) => (
+                <TableRow
+                  key={song._id}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#1d1c1c" : "#232525",
+                  }}
+                  className="table-row"
+                >
+                  <TableCell className="table-cell">
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <img
+                        src={song.thumbnail}
+                        alt={song.title}
+                        style={{
+                          width: "40px",
+                          height: "40px",
+                          marginRight: "10px",
+                        }}
+                      />
+                      <div style={{ color: "white" }}>{song.title}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell style={{ color: "white" }}>
+                    {song.artist
+                      .map((artistId) => artistNames[artistId])
+                      .join(", ")}
+                  </TableCell>
+                  <TableCell style={{ color: "white" }}>
+                    {album.title}
+                  </TableCell>
+                  <TableCell>
+                    <IconButton onClick={() => togglePlay(index)}>
+                      {isPlaying[index] ? <Pause /> : <PlayArrow />}
+                    </IconButton>
+                    <IconButton onClick={() => toggleFavorite(song)}>
+                      {favoriteSongs.includes(song) ? (
+                        <Favorite style={{ color: "red" }} />
+                      ) : (
+                        <FavoriteBorder />
+                      )}
+                    </IconButton>
+                    <audio
+                      ref={(audio) => (audioElements[index] = audio)}
+                      src={song.audio_url}
+                      preload="auto"
+                    ></audio>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
     </div>
   );
 }
